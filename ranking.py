@@ -14,15 +14,24 @@ def generate_htmls():
     def generate_table(score_text):
         ranking = {}
         titles = {}
+        diffs = {}
         for user in users:
             csv_path = Path(f"{user}.csv")
             df = pandas.read_csv(csv_path)
             ranking[user] = float(df.iloc[-1, :][score_text])
             titles[user] = df.iloc[-1, :][f'{score_text}_name']
+            if len(df) >= 2:
+                diffs[user] = float(df.iloc[-1, :][score_text]) - \
+                    float(df.iloc[-2, :][score_text])
+            else:
+                diffs[user] = 0
 
         sorted_users, sorted_scores = zip(*sorted(
             ranking.items(), key=lambda x: x[1], reverse=True))
         sorted_titles = [titles[user] for user in sorted_users]
+        sorted_diffs = [diffs[user] for user in sorted_users]
+        sorted_scores = [f"{_score} ({_diff:+.1f})" if _diff !=
+                         0 else _score for _score, _diff in zip(sorted_scores, sorted_diffs)]
         df = pandas.DataFrame(
             {"Name": sorted_users, "Score": sorted_scores, "Titles": sorted_titles})
         df.index = [index + 1 for index in df.index]
@@ -70,4 +79,4 @@ def generate_htmls():
 
 
 if __name__ == '__main__':
-    pass
+    generate_htmls()
